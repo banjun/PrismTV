@@ -64,16 +64,25 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         w.allowsBackForwardNavigationGestures = false
     }
 
+    private lazy var nextButton: NSButton = .init() ※ { b in
+        b.title = "Next"
+        b.bezelStyle = .rounded
+        b.target = self
+        b.action = #selector(playNext)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
         let autolayout = view.northLayoutFormat([:], [
+            "next": nextButton,
             "table": NSScrollView() ※ {
                 $0.documentView = tableView
             },
             "web": webView])
         autolayout("H:|[table(==256)]-[web(>=769)]|") // anitv webview must be >= 768 for playback
-        autolayout("V:|[table(>=256)]|")
+        autolayout("H:[next]-40-[web]")
+        autolayout("V:|-[next]-[table(>=256)]|")
         autolayout("V:|[web]|")
         tableView.setContentHuggingPriority(.fittingSizeCompression, for: .vertical)
         webView.setContentHuggingPriority(.fittingSizeCompression, for: .vertical)
@@ -103,7 +112,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         currentLive = lives[row]
     }
 
-    func playNext() {
+    @objc func playNext() {
         let index = currentLive.flatMap {lives.firstIndex(of: $0)} ?? 0
         let nextIndex = (index + 1) % lives.count
         guard nextIndex < lives.count else { return }
