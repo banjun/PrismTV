@@ -16,7 +16,8 @@ extension Live {
 
 class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate, WKNavigationDelegate {
     private var lives: [Live] = [
-        Live(episode: 1, song: "song 1", start: 1000, end: 1060, anitv: "https://ch.ani.tv/episodes/18716"),
+        Live(episode: 1, song: "レディー・アクション！", start: 1009, end: 1136, anitv: "https://ch.ani.tv/episodes/13143"),
+        Live(episode: 52, song: "TOKIMEKIハート・ジュエル♪", start: 1130, end: 1252, anitv: "https://ch.ani.tv/episodes/18716"),
         Live(episode: 2, song: "song 2", start: 1000, end: 1060, anitv: nil),
         Live(episode: 2, song: "song 3", start: 1000, end: 1060, anitv: nil),
         Live(episode: 3, song: "song 4", start: 1000, end: 1060, anitv: nil),
@@ -37,6 +38,8 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         tv.delegate = self
         tv.target = self
         tv.doubleAction = #selector(openInAniTV(_:))
+        tv.autosaveName = "Lives"
+        tv.autosaveTableColumns = true
     }
 
     private let episodeColumn: NSTableColumn = .init(identifier: .init(rawValue: "episode")) ※ { c in
@@ -62,7 +65,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
                 $0.documentView = tableView
             },
             "web": webView])
-        autolayout("H:|[table(==256)]-[web]|")
+        autolayout("H:|[table(==256)]-[web(>=769)]|") // anitv webview must be >= 768 for playback
         autolayout("V:|[table(>=256)]|")
         autolayout("V:|[web]|")
         tableView.setContentHuggingPriority(.fittingSizeCompression, for: .vertical)
@@ -95,24 +98,38 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            self.waitLoadAndPlay(seeking: self.currentLive?.start)
+            self.waitLoadAndPlay(seeking: self.currentLive?.start, waiting: self.currentLive?.end)
+            self.hideSideMenu()
         }
     }
 
     private let playerJS = "$(\"#player-embed-videoid_html5_api\")[0]"
     private let playButtonJS = "$(\"#player-ctrl-play\")"
 
-    func waitLoadAndPlay(seeking time: TimeInterval?) {
+    func hideSideMenu() {
+        webView.evaluateJavaScript("$(\"nav\").remove()")
+        webView.evaluateJavaScript("$(\"#contents\").css({\"cssText\": \"margin-left: 0 !important\"})")
+        webView.evaluateJavaScript("$(\".movie-content-movie .video-js\").css({\"cssText\": \"margin: 0 !important\"})")
+        webView.evaluateJavaScript("$(\"#player-ctrl-block\").css({\"cssText\": \"margin: 0 !important\"})")
+    }
+
+    func waitLoadAndPlay(seeking start: TimeInterval?, waiting end: TimeInterval?) {
         webView.evaluateJavaScript(playerJS + ".readyState") { [weak self] r, e in
             guard let `self` = self else { return }
 
             guard let v = r as? Int else { return }
             switch v {
-            case 0: self.clickPlay(seeking: time)
-            case 1,2,3,4: self.play(seeking: time)
+            case 0: self.clickPlay(seeking: start, waiting: end, completion: {
+                self.waitLoadAndPlay(seeking: start, waiting: end) // TODO: next in playlist
+            })
+            case 1,2,3,4: self.play(seeking: start, waiting: end, completion: {
+                self.waitLoadAndPlay(seeking: start, waiting: end) // TODO: next in playlist
+            })
             default:
                 NSLog("%@", "unknown readyState = \(v)")
-                self.clickPlay(seeking: time)
+                self.clickPlay(seeking: start, waiting: end, completion: {
+                    self.waitLoadAndPlay(seeking: start, waiting: end) // TODO: next in playlist
+                })
             }
         }
     }
@@ -134,20 +151,43 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         }
     }
 
-    func clickPlay(seeking time: TimeInterval?) {
-        webView.evaluateJavaScript(playButtonJS + ".click()") { [weak self] _, _ in
-            guard let time = time else { return }
-            self?.waitReadyStateAndDo {
-                self?.seek(to: time)
+    func waitCurrentTimeBecome(greaterThan time: TimeInterval, _ block: @escaping () -> Void) {
+        let currentLive = self.currentLive
+        webView.evaluateJavaScript(playerJS + ".currentTime") { [weak self] r, e in
+            NSLog("%@", "currentTime = \(String(describing: r)), error = \(String(describing: e))")
+            guard let `self` = self,
+                let v = r as? Double else { return }
+            if v > time {
+                block()
+            } else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    guard currentLive == self?.currentLive else { return }
+                    self?.waitCurrentTimeBecome(greaterThan: time, block)
+                }
             }
         }
     }
 
-    func play(seeking time: TimeInterval?) {
-        webView.evaluateJavaScript(playerJS + ".play()") { [weak self] _, _ in
-            guard let time = time else { return }
+    func clickPlay(seeking start: TimeInterval?, waiting end: TimeInterval?, completion: (() -> Void)?) {
+        webView.evaluateJavaScript(playButtonJS + ".click()") { [weak self] _, _ in
+            guard let start = start else { return }
             self?.waitReadyStateAndDo {
-                self?.seek(to: time)
+                self?.seek(to: start)
+                if let end = end {
+                    self?.waitCurrentTimeBecome(greaterThan: end, completion ?? {})
+                }
+            }
+        }
+    }
+
+    func play(seeking start: TimeInterval?, waiting end: TimeInterval?, completion: (() -> Void)?) {
+        webView.evaluateJavaScript(playerJS + ".play()") { [weak self] _, _ in
+            guard let start = start else { return }
+            self?.waitReadyStateAndDo {
+                self?.seek(to: start)
+                if let end = end {
+                    self?.waitCurrentTimeBecome(greaterThan: end, completion ?? {})
+                }
             }
         }
     }
