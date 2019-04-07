@@ -17,6 +17,7 @@ extension Live {
 class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate, WKNavigationDelegate {
     private var lives: [Live] = [
         Live(episode: 1, song: "レディー・アクション！", start: 1009, end: 1136, anitv: "https://ch.ani.tv/episodes/13143"),
+        Live(episode: 5, song: "ワン・ツー・スウィーツ", start: 1142.8, end: 1236.2, anitv: "https://ch.ani.tv/episodes/13710"),
         Live(episode: 52, song: "TOKIMEKIハート・ジュエル♪", start: 1130, end: 1252, anitv: "https://ch.ani.tv/episodes/18716"),
         Live(episode: 2, song: "song 2", start: 1000, end: 1060, anitv: nil),
         Live(episode: 2, song: "song 3", start: 1000, end: 1060, anitv: nil),
