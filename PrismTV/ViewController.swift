@@ -15,9 +15,11 @@ extension Live {
 }
 
 class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate, WKNavigationDelegate {
+    // TODO: fetch lives from pripara DB
     private var lives: [Live] = [
         Live(episode: 1, song: "レディー・アクション！", start: 1009, end: 1136, anitv: "https://ch.ani.tv/episodes/13143"),
         Live(episode: 5, song: "ワン・ツー・スウィーツ", start: 1142.8, end: 1236.2, anitv: "https://ch.ani.tv/episodes/13710"),
+        Live(episode: 6, song: "スキスキセンサー", start: 1073.8, end: 1174.7, anitv: "https://ch.ani.tv/episodes/14089"),
         Live(episode: 52, song: "TOKIMEKIハート・ジュエル♪", start: 1130, end: 1252, anitv: "https://ch.ani.tv/episodes/18716"),
         Live(episode: 2, song: "song 2", start: 1000, end: 1060, anitv: nil),
         Live(episode: 2, song: "song 3", start: 1000, end: 1060, anitv: nil),
@@ -28,6 +30,10 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     private var currentLive: Live? {
         didSet {
             guard let url = currentLive?.anitvURL else { return }
+            if let index = (currentLive.flatMap {lives.firstIndex(of: $0)}),
+                index != tableView.selectedRow {
+                tableView.selectRowIndexes([index], byExtendingSelection: false)
+            }
             webView.load(URLRequest(url: url))
         }
     }
@@ -97,6 +103,13 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         currentLive = lives[row]
     }
 
+    func playNext() {
+        let index = currentLive.flatMap {lives.firstIndex(of: $0)} ?? 0
+        let nextIndex = (index + 1) % lives.count
+        guard nextIndex < lives.count else { return }
+        currentLive = lives[nextIndex]
+    }
+
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             self.waitLoadAndPlay(seeking: self.currentLive?.start, waiting: self.currentLive?.end)
@@ -121,15 +134,15 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             guard let v = r as? Int else { return }
             switch v {
             case 0: self.clickPlay(seeking: start, waiting: end, completion: {
-                self.waitLoadAndPlay(seeking: start, waiting: end) // TODO: next in playlist
+                self.playNext()
             })
             case 1,2,3,4: self.play(seeking: start, waiting: end, completion: {
-                self.waitLoadAndPlay(seeking: start, waiting: end) // TODO: next in playlist
+                self.playNext()
             })
             default:
                 NSLog("%@", "unknown readyState = \(v)")
                 self.clickPlay(seeking: start, waiting: end, completion: {
-                    self.waitLoadAndPlay(seeking: start, waiting: end) // TODO: next in playlist
+                    self.playNext()
                 })
             }
         }
