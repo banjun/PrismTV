@@ -1,0 +1,6 @@
+framework module Pods_PrismTV {
+  umbrella header "Pods-PrismTV-umbrella.h"
+
+  export *
+  module * { export * }
+}

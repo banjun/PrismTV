@@ -1,0 +1,28 @@
+PODS:
+  - FootlessParser (0.5.1)
+  - Kingfisher (4.10.0)
+  - NorthLayout (5.1.0):
+    - FootlessParser (~> 0.4)
+  - "※ikemen (0.5.0)"
+
+DEPENDENCIES:
+  - Kingfisher
+  - NorthLayout
+  - "※ikemen"
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - FootlessParser
+    - Kingfisher
+    - NorthLayout
+    - "※ikemen"
+
+SPEC CHECKSUMS:
+  FootlessParser: d59a9266ec55ed5a801fb171e25be43abfb42927
+  Kingfisher: 43c4b802d8b5256cf1f4379e9cd10b329be6d3e2
+  NorthLayout: 157045b4ef9e94019f00ec9dc66192c2b17c0c61
+  "※ikemen": 0cf85af52790db21a846ad31abca356e99da1ffb
+
+PODFILE CHECKSUM: 47c3876c4cdb7d923253568b9d22853c89ffe07f
+
+COCOAPODS: 1.6.1
