@@ -1,0 +1,6 @@
+framework module SwiftSparql {
+  umbrella header "SwiftSparql-umbrella.h"
+
+  export *
+  module * { export * }
+}

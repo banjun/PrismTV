@@ -1,28 +1,44 @@
 PODS:
-  - FootlessParser (0.5.1)
-  - Kingfisher (4.10.0)
-  - NorthLayout (5.1.0):
+  - BrightFutures (8.0.0)
+  - FootlessParser (0.5.2)
+  - Kingfisher (5.13.4):
+    - Kingfisher/Core (= 5.13.4)
+  - Kingfisher/Core (5.13.4)
+  - NorthLayout (5.2.0):
     - FootlessParser (~> 0.4)
-  - "※ikemen (0.5.0)"
+  - SwiftSparql (0.4.0):
+    - SwiftSparql/BrightFutures (= 0.4.0)
+    - SwiftSparql/Core (= 0.4.0)
+  - SwiftSparql/BrightFutures (0.4.0):
+    - BrightFutures (~> 8.0)
+    - SwiftSparql/Core
+  - SwiftSparql/Core (0.4.0):
+    - FootlessParser (~> 0.5)
+  - "※ikemen (0.6.0)"
 
 DEPENDENCIES:
   - Kingfisher
   - NorthLayout
+  - SwiftSparql
   - "※ikemen"
 
 SPEC REPOS:
-  https://github.com/cocoapods/specs.git:
+  trunk:
+    - BrightFutures
     - FootlessParser
     - Kingfisher
     - NorthLayout
+    - SwiftSparql
     - "※ikemen"
 
 SPEC CHECKSUMS:
-  FootlessParser: d59a9266ec55ed5a801fb171e25be43abfb42927
-  Kingfisher: 43c4b802d8b5256cf1f4379e9cd10b329be6d3e2
-  NorthLayout: 157045b4ef9e94019f00ec9dc66192c2b17c0c61
-  "※ikemen": 0cf85af52790db21a846ad31abca356e99da1ffb
+  BrightFutures: f8427b46feabaf73c5e71ace7d86d65dfbb47696
+  FootlessParser: 521916d592fa6cba06cfca6f4b5d4f5a2d49175a
+  Kingfisher: d2279a7abece3c7f25a80cd2b7f363ca5cf3f44c
+  NorthLayout: 308a58a8f7d96f316e6399ff6432f8769321bbdf
+  SwiftSparql: 7b732de3b38bed6828612e7b8659993e405b032c
+  "※ikemen": da47fe6e0acfbe241611221f4d98ade266bf50a2
 
-PODFILE CHECKSUM: 47c3876c4cdb7d923253568b9d22853c89ffe07f
+PODFILE CHECKSUM: d0d2f55683f7835937482d02c035c6de0475c11e
 
-COCOAPODS: 1.6.1
+COCOAPODS: 1.9.1

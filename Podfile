@@ -5,4 +5,5 @@ target 'PrismTV' do
   pod '※ikemen'
   pod 'NorthLayout'
   pod 'Kingfisher'
+  pod 'SwiftSparql'
 end
