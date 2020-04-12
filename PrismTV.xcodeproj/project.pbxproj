@@ -8,16 +8,19 @@
 
 /* Begin PBXBuildFile section */
 		D1F868A10A51B8454133B01E /* Pods_PrismTV.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E9BF2F803BD0A0510FD1B8B /* Pods_PrismTV.framework */; };
+		EA9D17582443584F00641BA0 /* AutolayoutLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA9D17572443584F00641BA0 /* AutolayoutLabel.swift */; };
 		EAA3A3952259C48900D390AE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAA3A3942259C48900D390AE /* AppDelegate.swift */; };
 		EAA3A3972259C48900D390AE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAA3A3962259C48900D390AE /* ViewController.swift */; };
 		EAA3A3992259C48B00D390AE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EAA3A3982259C48B00D390AE /* Assets.xcassets */; };
 		EAA3A39C2259C48B00D390AE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EAA3A39A2259C48B00D390AE /* Main.storyboard */; };
+		EAB127F32443439300FB693D /* PrismDB.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAB127F22443439300FB693D /* PrismDB.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		7E9BF2F803BD0A0510FD1B8B /* Pods_PrismTV.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_PrismTV.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8619B8D4981504D062AE0004 /* Pods-PrismTV.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PrismTV.debug.xcconfig"; path = "Target Support Files/Pods-PrismTV/Pods-PrismTV.debug.xcconfig"; sourceTree = "<group>"; };
 		E47F5669E3F7AB9E5D890C51 /* Pods-PrismTV.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PrismTV.release.xcconfig"; path = "Target Support Files/Pods-PrismTV/Pods-PrismTV.release.xcconfig"; sourceTree = "<group>"; };
+		EA9D17572443584F00641BA0 /* AutolayoutLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutolayoutLabel.swift; sourceTree = "<group>"; };
 		EAA3A3912259C48900D390AE /* PrismTV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PrismTV.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EAA3A3942259C48900D390AE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		EAA3A3962259C48900D390AE /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -25,6 +28,7 @@
 		EAA3A39B2259C48B00D390AE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		EAA3A39D2259C48B00D390AE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EAA3A39E2259C48B00D390AE /* PrismTV.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PrismTV.entitlements; sourceTree = "<group>"; };
+		EAB127F22443439300FB693D /* PrismDB.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrismDB.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +83,8 @@
 			children = (
 				EAA3A3942259C48900D390AE /* AppDelegate.swift */,
 				EAA3A3962259C48900D390AE /* ViewController.swift */,
+				EAB127F22443439300FB693D /* PrismDB.swift */,
+				EA9D17572443584F00641BA0 /* AutolayoutLabel.swift */,
 				EAA3A3982259C48B00D390AE /* Assets.xcassets */,
 				EAA3A39A2259C48B00D390AE /* Main.storyboard */,
 				EAA3A39D2259C48B00D390AE /* Info.plist */,
@@ -206,8 +212,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EAB127F32443439300FB693D /* PrismDB.swift in Sources */,
 				EAA3A3972259C48900D390AE /* ViewController.swift in Sources */,
 				EAA3A3952259C48900D390AE /* AppDelegate.swift in Sources */,
+				EA9D17582443584F00641BA0 /* AutolayoutLabel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

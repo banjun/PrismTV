@@ -2,51 +2,60 @@ import Cocoa
 import Ikemen
 import NorthLayout
 import WebKit
+import BrightFutures
 
-struct Live: Equatable {
-    var episode: Int
-    var song: String
-    var start: Double?
-    var end: Double?
-    var anitv: String?
-}
-extension Live {
-    var anitvURL: URL? {return anitv.flatMap {URL(string: $0)}}
-}
-
-class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate, WKNavigationDelegate {
-    // TODO: fetch lives from pripara DB
-    private var lives: [Live] = [
-        Live(episode: 1, song: "レディー・アクション！", start: 1009, end: 1136, anitv: "https://ch.ani.tv/episodes/13143"),
-        Live(episode: 5, song: "ワン・ツー・スウィーツ", start: 1142.8, end: 1236.2, anitv: "https://ch.ani.tv/episodes/13710"),
-        Live(episode: 6, song: "スキスキセンサー", start: 1073.8, end: 1174.7, anitv: "https://ch.ani.tv/episodes/14089"),
-        Live(episode: 52, song: "TOKIMEKIハート・ジュエル♪", start: 1130, end: 1252, anitv: "https://ch.ani.tv/episodes/18716"),
-        Live(episode: 2, song: "song 2", start: 1000, end: 1060, anitv: nil),
-        Live(episode: 2, song: "song 3", start: 1000, end: 1060, anitv: nil),
-        Live(episode: 3, song: "song 4", start: 1000, end: 1060, anitv: nil),
-        Live(episode: 4, song: "song 5", start: 1000, end: 1060, anitv: nil),
-        Live(episode: 4, song: "song 6", start: 1000, end: 1060, anitv: nil),
-    ]
-    private var currentLive: Live? {
+class ViewController: NSViewController, NSOutlineViewDelegate, NSOutlineViewDataSource, WKNavigationDelegate {
+    private let prismdb = PrismDB()
+    private var episodesAndLives: ([PrismDB.Episode], [PrismDB.Live]) = ([], []) {
         didSet {
-            guard let url = currentLive?.anitvURL else { return }
-            if let index = (currentLive.flatMap {lives.firstIndex(of: $0)}),
-                index != tableView.selectedRow {
-                tableView.selectRowIndexes([index], byExtendingSelection: false)
-            }
+            outlineView.reloadData()
+            outlineView.expandItem(nil, expandChildren: true)
+        }
+    }
+    private var episodes: [PrismDB.Episode] {
+        episodesAndLives.0
+    }
+    private var lives: [PrismDB.Live] {
+        let episodeIRIs = self.episodes.map {$0.iri}
+        return episodesAndLives.1.filter {episodeIRIs.contains($0.episodeIRI)}
+    }
+    private var currentEpisode: PrismDB.Episode? {
+        didSet {
+            guard let url = currentEpisode?.anitvURL else { return }
             webView.load(URLRequest(url: url))
         }
     }
+    private var currentLive: PrismDB.Live? {
+        didSet {
+            let row = outlineView.row(forItem: currentLive)
+            if row >= 0 {
+                if row != outlineView.selectedRow {
+                    outlineView.selectRowIndexes([row], byExtendingSelection: false)
+                    outlineView.scrollRowToVisible(row)
+                }
+            } else {
+                outlineView.deselectAll(nil)
+            }
 
-    private lazy var tableView: NSTableView = .init() ※ { tv in
-        tv.addTableColumn(episodeColumn)
-        tv.addTableColumn(liveColumn)
-        tv.dataSource = self
-        tv.delegate = self
-        tv.target = self
-        tv.doubleAction = #selector(openInAniTV(_:))
-        tv.autosaveName = "Lives"
-        tv.autosaveTableColumns = true
+            guard let currentLive = currentLive else { return }
+            if currentLive.episodeIRI != currentEpisode?.iri {
+                currentEpisode = episodes.first {$0.iri == currentLive.episodeIRI}
+            } else {
+                waitLoadAndPlay(seeking: currentLive.start, waiting: currentLive.end)
+            }
+        }
+    }
+
+    private lazy var outlineView: NSOutlineView = .init() ※ { ov in
+        ov.addTableColumn(liveColumn)
+        ov.outlineTableColumn = liveColumn
+        ov.dataSource = self
+        ov.delegate = self
+        ov.target = self
+        ov.doubleAction = #selector(openInAniTV(_:))
+        ov.autosaveName = "Lives"
+        ov.autosaveTableColumns = true
+        ov.usesAutomaticRowHeights = true
     }
 
     private let episodeColumn: NSTableColumn = .init(identifier: .init(rawValue: "episode")) ※ { c in
@@ -77,39 +86,97 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         let autolayout = view.northLayoutFormat([:], [
             "next": nextButton,
             "table": NSScrollView() ※ {
-                $0.documentView = tableView
+                $0.documentView = outlineView
+                $0.hasVerticalScroller = true
             },
             "web": webView])
         autolayout("H:|[table(==256)]-[web(>=769)]|") // anitv webview must be >= 768 for playback
         autolayout("H:[next]-40-[web]")
         autolayout("V:|-[next]-[table(>=256)]|")
         autolayout("V:|[web]|")
-        tableView.setContentHuggingPriority(.fittingSizeCompression, for: .vertical)
+        outlineView.setContentHuggingPriority(.fittingSizeCompression, for: .vertical)
         webView.setContentHuggingPriority(.fittingSizeCompression, for: .vertical)
     }
 
-    func numberOfRows(in tableView: NSTableView) -> Int {
-        return lives.count
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        updatePrismDB()
     }
 
-    func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int) -> Any? {
-        let live = lives[row]
-        switch tableColumn {
-        case episodeColumn: return live.episode
-        case liveColumn: return live.song
+    private func updatePrismDB() {
+        prismdb.episodes().zip(prismdb.lives())
+            .onSuccess { (episodes, lives) in
+                let episodeIRIs = episodes.map {$0.iri}
+                self.episodesAndLives = (episodes, lives.filter {episodeIRIs.contains($0.episodeIRI)})
+        }
+            .onFailure {NSLog("%@", "\(String(describing: $0))")}
+    }
+
+    func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
+        switch item {
+        case nil: return episodes.count
+        case let episode as PrismDB.Episode: return lives.filter {
+            $0.episodeIRI == episode.iri}.count
+        default: return 0
+        }
+    }
+
+    func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
+        switch item {
+        case nil: return episodes[index]
+        case let episode as PrismDB.Episode: return lives.filter {
+            $0.episodeIRI == episode.iri}[index]
         default: fatalError()
         }
     }
 
-    func tableView(_ tableView: NSTableView, shouldEdit tableColumn: NSTableColumn?, row: Int) -> Bool {
-        return false
+    func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
+        switch item {
+        case is PrismDB.Episode: return true
+        case is PrismDB.Live: return false
+        default: fatalError()
+        }
+    }
+
+    func outlineView(_ outlineView: NSOutlineView, shouldEdit tableColumn: NSTableColumn?, item: Any) -> Bool {
+        false
+    }
+
+    func outlineView(_ outlineView: NSOutlineView, viewFor tableColumn: NSTableColumn?, item: Any) -> NSView? {
+        switch item {
+        case let episode as PrismDB.Episode:
+            return NSView() ※ {
+                let autolayout = $0.northLayoutFormat([:], [
+                    "title": AutolayoutLabel() ※ {
+                        $0.stringValue = episode.label + "\n「" + episode.subtitle + "」"
+                        $0.font = NSFont.boldSystemFont(ofSize: NSFont.systemFontSize)
+                    }])
+                autolayout("H:|-[title]-|")
+                autolayout("V:|-[title]-|")
+            }
+        case let live as PrismDB.Live:
+            return NSView() ※ {
+                let df = DateFormatter()
+                df.timeZone = TimeZone(secondsFromGMT: 0)
+                df.dateFormat = "mm:ss"
+                let start = live.start.flatMap {df.string(from: Date(timeIntervalSince1970: $0))}
+                let autolayout = $0.northLayoutFormat([:], ["title": AutolayoutLabel() ※ {
+                    $0.stringValue = (start.map {"[\($0)]: "} ?? "") + "\(live.song) (\(live.performer))"}])
+                autolayout("H:|[title]-|")
+                autolayout("V:|-[title]-|")
+            }
+        default: fatalError()
+        }
     }
 
     @objc func openInAniTV(_ sender: AnyObject?) {
-        let row = tableView.clickedRow
-        guard 0 <= row,
-            row < lives.count else { return }
-        currentLive = lives[row]
+        switch outlineView.item(atRow: outlineView.clickedRow) {
+        case let episode as PrismDB.Episode:
+            currentEpisode = episode
+        case let live as PrismDB.Live:
+            currentLive = live
+        default: return
+        }
     }
 
     @objc func playNext() {
